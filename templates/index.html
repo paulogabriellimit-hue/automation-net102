@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Network Automation</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --page: #f5f7fb;
+            --surface: #fff;
+            --border: #e5e9f1;
+            --text: #192338;
+            --muted: #748097;
+            --accent: #5665e9;
+            --accent-soft: #eef0ff;
+            --green: #1b9b68;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--page);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        aside {
+            display: flex;
+            flex-direction: column;
+            padding: 26px 16px;
+            border-right: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 8px 34px;
+            font-size: 15px;
+            font-weight: 750;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 36px;
+            height: 36px;
+            place-items: center;
+            border-radius: 11px;
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .nav-label {
+            margin: 0 10px 9px;
+            color: #9aa3b3;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .nav-item {
+            padding: 11px 12px;
+            border-radius: 9px;
+            color: var(--accent);
+            background: var(--accent-soft);
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .aside-note {
+            margin-top: auto;
+            padding: 14px 8px 0;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        main {
+            width: min(1200px, 100%);
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        h1 { margin: 0; font-size: 24px; }
+
+        .page-header p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: var(--surface);
+            color: #5e6a80;
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #a5adba;
+        }
+
+        .status-dot.failed { background: #d95362; }
+        .status-dot.connected { background: #1b9b68; }
+
+        .columns {
+            display: grid;
+            grid-template-columns: 270px minmax(0, 1fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .card {
+            min-width: 0;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            background: var(--surface);
+            box-shadow: 0 5px 18px rgba(31, 45, 70, .04);
+        }
+
+        .device-card { padding: 18px; }
+
+        .card-title {
+            margin: 0 0 15px;
+            font-size: 14px;
+        }
+
+        .device-details {
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 9px;
+            background: #f8f9fc;
+        }
+
+        .detail {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 12px;
+        }
+
+        .detail span { color: var(--muted); }
+        .detail strong { text-align: right; }
+
+        .run-button {
+            width: 100%;
+            min-height: 42px;
+            border: 0;
+            border-radius: 8px;
+            background: var(--accent);
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .run-button:hover { background: #4553d2; }
+        .run-button:disabled { opacity: .65; cursor: wait; }
+
+        .command-list {
+            margin-top: 18px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+
+        .command-label {
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .command {
+            padding: 7px 0;
+            color: #536078;
+            font-family: Consolas, monospace;
+            font-size: 11px;
+        }
+
+        .command::before { content: "$ "; color: var(--green); }
+
+        .output-card { overflow: hidden; }
+
+        .output-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-height: 60px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+        }
+
+        .tab, .copy-button {
+            flex: none;
+            border: 0;
+            border-radius: 7px;
+            padding: 9px 10px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .tab {
+            color: var(--muted);
+            background: transparent;
+            white-space: nowrap;
+        }
+
+        .tab.active { color: var(--accent); background: var(--accent-soft); }
+
+        .copy-button {
+            border: 1px solid var(--border);
+            color: #5d6980;
+            background: white;
+        }
+
+        .terminal {
+            min-height: 490px;
+            max-height: 65vh;
+            margin: 0;
+            padding: 20px;
+            overflow: auto;
+            background: #111827;
+            color: #e2e8f0;
+            font: 12px/1.65 Consolas, "Courier New", monospace;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .empty-state {
+            display: grid;
+            min-height: 490px;
+            place-content: center;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            display: grid;
+            width: 54px;
+            height: 54px;
+            margin: 0 auto 13px;
+            place-items: center;
+            border-radius: 16px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-family: Consolas, monospace;
+            font-weight: 700;
+        }
+
+        .empty-state strong { display: block; margin-bottom: 6px; font-size: 14px; }
+        .empty-state p { margin: 0; color: var(--muted); font-size: 12px; }
+
+        .error {
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            border: 1px solid #f3c6cb;
+            border-radius: 9px;
+            background: #fff3f4;
+            color: #963b46;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        [hidden] { display: none !important; }
+
+        @media (max-width: 800px) {
+            .layout { grid-template-columns: 1fr; }
+            aside { display: none; }
+            main { padding: 22px 16px; }
+            .columns { grid-template-columns: 1fr; }
+            .terminal, .empty-state { min-height: 400px; }
+        }
+
+        @media (max-width: 500px) {
+            .page-header { align-items: flex-start; }
+            h1 { font-size: 21px; }
+            .status { padding: 8px; }
+            .status span:last-child { display: none; }
+            .output-header { align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside>
+            <div class="brand"><span class="brand-mark">N</span><span>NetPilot</span></div>
+            <div class="nav-label">Workspace</div>
+            <div class="nav-item">Network diagnostics</div>
+            <div class="aside-note">Router automation</div>
+        </aside>
+
+        <main>
+            <header class="page-header">
+                <div>
+                    <h1>Network diagnostics</h1>
+                    <p>Run commands and review the router output.</p>
+                </div>
+                <div class="status">
+                    <span class="status-dot {% if error %}failed{% elif results %}connected{% endif %}"></span>
+                    <span>{{ "Connection failed" if error else ("Connected" if results else "Ready") }}</span>
+                </div>
+            </header>
+
+            {% if error %}
+            <div class="error" role="alert">{{ error }}</div>
+            {% endif %}
+
+            <div class="columns">
+                <section class="card device-card">
+                    <h2 class="card-title">Target device</h2>
+                    <div class="device-details">
+                        <div class="detail"><span>Host</span><strong>{{ device.ip }}</strong></div>
+                        <div class="detail"><span>Port</span><strong>{{ device.port }}</strong></div>
+                        <div class="detail"><span>Connection</span><strong>{{ device.device_type }}</strong></div>
+                    </div>
+
+                    <form method="POST" id="run-form">
+                        <button class="run-button" id="run-button" type="submit">Run diagnostics</button>
+                    </form>
+
+                    <div class="command-list">
+                        <div class="command-label">Commands to run</div>
+                        <div class="command">show version</div>
+                        <div class="command">show ip interface brief</div>
+                        <div class="command">show running-config</div>
+                    </div>
+                </section>
+
+                <section class="card output-card" aria-label="Command output">
+                    {% if results %}
+                    <div class="output-header">
+                        <div class="tabs" role="tablist" aria-label="Command results">
+                            {% for command in results %}
+                            <button class="tab {% if loop.first %}active{% endif %}"
+                                    type="button" role="tab" data-tab="{{ loop.index0 }}"
+                                    aria-selected="{{ 'true' if loop.first else 'false' }}">{{ command }}</button>
+                            {% endfor %}
+                        </div>
+                        <button class="copy-button" type="button" id="copy-button">Copy</button>
+                    </div>
+                    {% for command, output in results.items() %}
+                    <pre class="terminal" role="tabpanel" data-output="{{ loop.index0 }}" {% if not loop.first %}hidden{% endif %}>{{ output }}</pre>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <div>
+                            <div class="empty-icon">&gt;_</div>
+                            <strong>No output yet</strong>
+                            <p>Select “Run diagnostics” to retrieve device output.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const form = document.getElementById("run-form");
+        const runButton = document.getElementById("run-button");
+
+        form.addEventListener("submit", function () {
+            runButton.disabled = true;
+            runButton.textContent = "Connecting...";
+        });
+
+        document.querySelectorAll(".tab").forEach(function (tab) {
+            tab.addEventListener("click", function () {
+                document.querySelectorAll(".tab").forEach(function (item) {
+                    item.classList.toggle("active", item === tab);
+                    item.setAttribute("aria-selected", item === tab ? "true" : "false");
+                });
+                document.querySelectorAll(".terminal").forEach(function (output) {
+                    output.hidden = output.dataset.output !== tab.dataset.tab;
+                });
+            });
+        });
+
+        const copyButton = document.getElementById("copy-button");
+        if (copyButton) {
+            copyButton.addEventListener("click", async function () {
+                const output = document.querySelector(".terminal:not([hidden])");
+                if (!output) return;
+
+                try {
+                    await navigator.clipboard.writeText(output.textContent);
+                    copyButton.textContent = "Copied";
+                    setTimeout(function () { copyButton.textContent = "Copy"; }, 1200);
+                } catch (error) {
+                    copyButton.textContent = "Copy unavailable";
+                    setTimeout(function () { copyButton.textContent = "Copy"; }, 1800);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
